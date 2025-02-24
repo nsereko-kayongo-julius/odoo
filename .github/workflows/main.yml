@@ -32,6 +32,7 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
+
       - name: Create Dockerfile
         run: |
           cat << 'EOF' > Dockerfile
@@ -56,6 +57,7 @@ jobs:
           
           CMD ["odoo"]
           EOF
+
       - name: Create .env file
         run: |
           cat << EOF > .env
@@ -65,6 +67,7 @@ jobs:
           PGDATA=/var/lib/postgresql/data/pgdata
           HOST=${DB_HOST}
           EOF
+
       - name: Create required directories and files
         run: |
           mkdir -p config addons
@@ -77,6 +80,7 @@ jobs:
           db_password = ${DB_PASSWORD}
           db_name = ${DB_NAME}
           EOF
+
       - name: Create docker-compose.yml
         run: |
           cat << EOF > docker-compose.yml
@@ -84,7 +88,7 @@ jobs:
           
           services:
             odoo:
-              image: nsereko-kayongo-julius/odoo-proseit:latest
+              image: nserweko/odoo:latest  # Updated to match your DockerHub repository
               env_file: .env
               ports:
                 - "127.0.0.1:8069:8069"
@@ -102,10 +106,12 @@ jobs:
             odoo_network:
               driver: bridge
           EOF
+
       - name: Build and tag Docker Image
         run: |
-          docker build -t nsereko-kayongo-julius/odoo-proseit:${{ github.sha }} \
-                      -t nsereko-kayongo-julius/odoo-proseit:latest .
+          docker build -t nserweko/odoo:${{ github.sha }} \
+                      -t nserweko/odoo:latest .
+          
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -115,5 +121,5 @@ jobs:
       - name: Push Docker Image
         if: github.ref == 'refs/heads/main'
         run: |
-          docker push nsereko-kayongo-julius/odoo-proseit:${{ github.sha }}
-          docker push nsereko-kayongo-julius/odoo-proseit:latest
+          docker push nserweko/odoo:${{ github.sha }}  # Push with the commit SHA
+          docker push nserweko/odoo:latest            # Push the latest tag
