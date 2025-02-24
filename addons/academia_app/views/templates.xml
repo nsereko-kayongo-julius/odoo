@@ -1,0 +1,9 @@
+<odoo>
+    <data>
+    <template id="navbar_toggler" name="Navbar Toggler">
+        <button class="btn btn-secondary">
+            toogle
+        </button>
+    </template>
+    </data>
+</odoo>

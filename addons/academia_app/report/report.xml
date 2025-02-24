@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="course_report" model="ir.actions.report">
+            <field name="name">Report</field>
+            <field name="model">academia_app.course</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">academia_app.report_course_report</field>
+            <field name="report_file">academia_app.report_course_report</field>
+            <field name="binding_model_id" ref="model_academia_app_course"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>
