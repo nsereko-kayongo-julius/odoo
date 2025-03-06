@@ -5,16 +5,15 @@ on:
     branches:
       - main
     paths:
-      - '**/*'
+      - "**/*"
   pull_request:
     branches:
       - main
-      
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     env:
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_USER: ${{ secrets.DB_USER }}
@@ -38,24 +37,25 @@ jobs:
         run: |
           cat << 'EOF' > Dockerfile
           FROM odoo:17.0
-          
+
           USER root
           RUN apt-get update && apt-get install -y \
               python3-pip \
               build-essential \
               python3-dev \
+              && pip3 install --upgrade psycopg2-binary \  
               && rm -rf /var/lib/apt/lists/*
-          
+
           COPY ./config/odoo.conf /etc/odoo/
           COPY ./addons /mnt/extra-addons/
-          
+
           RUN chown -R odoo:odoo /etc/odoo/odoo.conf \
               && chown -R odoo:odoo /mnt/extra-addons
-          
+
           USER odoo
-          
+
           EXPOSE 8069 8071
-          
+
           CMD ["odoo"]
           EOF
 
@@ -80,13 +80,15 @@ jobs:
           db_user = ${DB_USER}
           db_password = ${DB_PASSWORD}
           db_name = ${DB_NAME}
+          db_sslmode = disable
+          db_maxconn = 50 
           EOF
 
       - name: Create docker-compose.yml
         run: |
           cat << EOF > docker-compose.yml
           version: '3.8'
-          
+
           services:
             odoo:
               image: nserweko/odoo:latest  # Updated to match your DockerHub repository
@@ -99,10 +101,10 @@ jobs:
                 - ./addons:/mnt/extra-addons
               networks:
                 - odoo_network
-          
+
           volumes:
             odoo_data:
-          
+
           networks:
             odoo_network:
               driver: bridge
@@ -112,7 +114,7 @@ jobs:
         run: |
           docker build -t nserweko/odoo:${{ github.sha }} \
                       -t nserweko/odoo:latest .
-          
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
