@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="hase_age" model="ir.ui.view">
+                <field name="name">purchase_age</field>
+                <field name="model">purchase.order</field>
+                <field name="inherit_id" ref="purchase.purchase_order_kpis_tree"/>            
+                <field name="arch" type="xml">
+                    
+                    <xpath expr="field[@name='user_id']" position="after">
+                        <field name="age"/>                    
+                    </xpath>
+                    
+                </field>
+        </record>
+
+
+          <record id="Real_estate_property_tree" model="ir.ui.view">
+              <field name="name">Real_estate_property_tree</field>
+              <field name="model">real_estate_property</field>
+              <field name="arch" type="xml">
+                  <tree >
+                      <field name="name" />
+                      <field name="description"/>
+                      <field name="postcode"/>
+                      <field name="property_type_id"/>
+                  </tree>
+              </field>
+          </record>
+
+          <record id="Real_estate_property_form" model="ir.ui.view">
+              <field name="name">Real_estate_property_form</field>
+              <field name="model">real_estate_property</field>
+              <field name="arch" type="xml">
+                  <form >
+                  <header>
+                    <button name="action_cancel"  string="cancel" type="object" class="btn btn-primary"/>
+                    <button name="action_sold" string="sold" type="object"  class="btn btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="new, sold, cancel" readonly="1"/>
+                  </header>
+                      <sheet>
+                          <group>
+                              <field name="name" />
+                              <field name="description"/>
+                              <field name="postcode"/>
+                              <field name="property_type_id"/>
+                          </group>
+                      
+                      <notebook>
+                        <page string="Description">
+                        <group>
+                            <field name="date_availability"></field>
+                            <field name="description"/>
+                            <field name="garage"/>
+                            <field name="garden_area"/>
+                            <field name="bedrooms"/> 
+                            <field name="total_area"/>                
+                            <field name="living_area"/>
+                        </group>                            
+                        </page>
+                      </notebook>
+                      </sheet>
+                      <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                            <field name="activity_ids"/>
+                            <field name="message_ids"/>
+                        </div>
+                  </form>
+              </field>
+
+          </record>
+
+
+
+
+    <record id="action_Real_estate_action" model="ir.actions.act_window">
+            <field name="name">Property</field>
+            <field name="res_model">real_estate_property</field>
+            <field name="view_mode">tree,form</field>
+            
+        </record>
+
+   
+    <menuitem
+        id="real_estate_root_menu"
+        name="REAL ESTATE"
+        sequence="0"/>
+
+    <menuitem id="menu_advertisements"
+    name="Advertisement"
+    parent="real_estate_root_menu"
+    sequence="10"/>
+
+  <menuitem id="menu_Properties"
+    name="Properties"
+    parent="menu_advertisements"
+    action="action_Real_estate_action"
+    sequence="10"/>
+    
+
+</odoo>
