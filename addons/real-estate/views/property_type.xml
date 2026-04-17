@@ -5,10 +5,10 @@
               <field name="name">Real_estate_property_type_tree</field>
               <field name="model">estate.property.type</field>
               <field name="arch" type="xml">
-                  <tree >
+                  <list >
                       <field name="name" />
                       
-                  </tree>
+                  </list>
               </field>
           </record>
 
