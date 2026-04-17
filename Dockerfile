@@ -81,9 +81,9 @@ RUN chmod +x /entrypoint.sh /usr/local/bin/wait-for-psql.py && \
     mkdir -p /mnt/extra-addons && \
     chown -R odoo /mnt/extra-addons
 
-COPY ./addons /mnt/extra-addons
+COPY --chown=odoo:odoo ./addons /mnt/extra-addons
 
-VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
+VOLUME ["/var/lib/odoo"]
 
 EXPOSE 8069 8071 8072
 
