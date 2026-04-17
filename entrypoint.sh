@@ -5,10 +5,11 @@ if [ -v PASSWORD_FILE ]; then
     PASSWORD="$(< "$PASSWORD_FILE")"
 fi
 
-: ${HOST:=${DB_PORT_5432_TCP_ADDR:='db'}}
-: ${PORT:=${DB_PORT_5432_TCP_PORT:=5432}}
-: ${USER:=${DB_ENV_POSTGRES_USER:=${POSTGRES_USER:='odoo'}}}
-: ${PASSWORD:=${DB_ENV_POSTGRES_PASSWORD:=${POSTGRES_PASSWORD:='odoo'}}}
+# Use DB_ prefixes to avoid collisions with Render's system variables
+: ${DB_HOST:=${DB_PORT_5432_TCP_ADDR:='db'}}
+: ${DB_PORT:=5432}
+: ${DB_USER:=${DB_ENV_POSTGRES_USER:=${POSTGRES_USER:='odoo'}}}
+: ${DB_PASSWORD:=${DB_ENV_POSTGRES_PASSWORD:=${POSTGRES_PASSWORD:='odoo'}}}
 
 DB_ARGS=()
 
@@ -22,10 +23,11 @@ check_config() {
     DB_ARGS+=("${value}")
 }
 
-check_config "db_host" "$HOST"
-check_config "db_port" "$PORT"
-check_config "db_user" "$USER"
-check_config "db_password" "$PASSWORD"
+# Pass the isolated variables
+check_config "db_host" "$DB_HOST"
+check_config "db_port" "$DB_PORT"
+check_config "db_user" "$DB_USER"
+check_config "db_password" "$DB_PASSWORD"
 
 case "$1" in
     -- | odoo)
