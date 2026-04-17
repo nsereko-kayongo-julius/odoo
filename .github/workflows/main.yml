@@ -19,6 +19,8 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      
 
     steps:
       - name: Checkout Code
@@ -36,7 +38,7 @@ jobs:
       - name: Create Dockerfile
         run: |
           cat << 'EOF' > Dockerfile
-          FROM odoo:17.0
+          FROM odoo:19.0
 
           USER root
           RUN apt-get update && apt-get install -y \
@@ -67,6 +69,7 @@ jobs:
           POSTGRES_USER=${DB_USER}
           PGDATA=/var/lib/postgresql/data/pgdata
           HOST=${DB_HOST}
+          PORT=${DB_PORT}
           EOF
 
       - name: Create required directories and files
@@ -76,7 +79,7 @@ jobs:
           [options]
           addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
           db_host = ${DB_HOST}
-          db_port = 32761
+          db_port = ${DB_PORT}
           db_user = ${DB_USER}
           db_password = ${DB_PASSWORD}
           db_name = ${DB_NAME}
