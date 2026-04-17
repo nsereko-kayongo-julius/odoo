@@ -16,107 +16,17 @@ jobs:
 
     env:
       DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      DB_PORT: ${{ secrets.DB_PORT }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
-      - name: Create Dockerfile
-        run: |
-          cat << 'EOF' > Dockerfile
-          FROM odoo:19.0
-
-          USER root
-
-          RUN for i in 1 2 3; do apt-get update && break || sleep 15; done && \
-              apt-get install -y --no-install-recommends \
-                python3-pip \
-                build-essential \
-                python3-dev && \
-              pip3 install --no-cache-dir --upgrade psycopg2-binary && \
-              rm -rf /var/lib/apt/lists/*
-
-          COPY ./config/odoo.conf /etc/odoo/
-          COPY ./addons /mnt/extra-addons/
-
-          RUN chown -R odoo:odoo /etc/odoo/odoo.conf /mnt/extra-addons
-
-          USER odoo
-
-          EXPOSE 8069 8071
-
-          CMD ["odoo"]
-          EOF
-
-      - name: Create .env file
-        run: |
-          cat << EOF > .env
-          POSTGRES_DB=${DB_NAME}
-          POSTGRES_PASSWORD=${DB_PASSWORD}
-          POSTGRES_USER=${DB_USER}
-          PGDATA=/var/lib/postgresql/data/pgdata
-          HOST=${DB_HOST}
-          PORT=${DB_PORT}
-          EOF
-
-      - name: Create required directories and files
-        run: |
-          mkdir -p config addons
-          cat << EOF > config/odoo.conf
-          [options]
-          addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
-          db_host = ${DB_HOST}
-          db_port = ${DB_PORT}
-          db_user = ${DB_USER}
-          db_password = ${DB_PASSWORD}
-          db_name = ${DB_NAME}
-          db_sslmode = disable
-          db_maxconn = 50
-          EOF
-
-      - name: Create docker-compose.yml
-        run: |
-          cat << EOF > docker-compose.yml
-          version: '3.8'
-
-          services:
-            odoo:
-              image: nserweko/odoo:latest
-              env_file: .env
-              ports:
-                - "127.0.0.1:8069:8069"
-              volumes:
-                - odoo_data:/var/lib/odoo
-                - ./config:/etc/odoo
-                - ./addons:/mnt/extra-addons
-              networks:
-                - odoo_network
-
-          volumes:
-            odoo_data:
-
-          networks:
-            odoo_network:
-              driver: bridge
-          EOF
-
-      - name: Build and tag Docker Image
-        run: |
-          docker build -t nserweko/odoo:${{ github.sha }} \
-                       -t nserweko/odoo:latest .
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -124,7 +34,33 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Push Docker Image
+      - name: Create runtime config
+        run: |
+          mkdir -p config addons
+
+          cat > config/odoo.conf << EOF
+          [options]
+          addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
+          data_dir = /var/lib/odoo
+          db_host = ${DB_HOST}
+          db_port = ${DB_PORT}
+          db_user = ${DB_USER}
+          db_password = ${DB_PASSWORD}
+          db_name = ${DB_NAME}
+          db_sslmode = disable
+          db_maxconn = 64
+          xmlrpc_port = 8069
+          xmlrpcs_port = 8071
+          longpolling_port = 8072
+          EOF
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t nserweko/odoo:${{ github.sha }} \
+            -t nserweko/odoo:latest .
+
+      - name: Push Docker image
         if: github.ref == 'refs/heads/main'
         run: |
           docker push nserweko/odoo:${{ github.sha }}
