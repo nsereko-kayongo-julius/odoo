@@ -1,0 +1,39 @@
+.o_pos_receipt_table .receipt-table,
+.o_pos_receipt_table_totals .receipt-totals-table {
+width: 100%;
+border-collapse: collapse;
+font-size: 10px;
+}
+
+
+.o_pos_receipt_table .receipt-table th,
+.o_pos_receipt_table .receipt-table td,
+.o_pos_receipt_table_totals .receipt-totals-table td {
+padding: 2px 4px;
+border-bottom: 1px dashed #000;
+}
+
+
+.o_pos_receipt_table .receipt-table th.product { text-align: left; }
+.o_pos_receipt_table .receipt-table th.qty,
+.o_pos_receipt_table .receipt-table th.uprice,
+.o_pos_receipt_table .receipt-table th.subtotal { text-align: right; }
+
+
+.o_pos_receipt_table .receipt-table td.qty,
+.o_pos_receipt_table .receipt-table td.uprice,
+.o_pos_receipt_table .receipt-table td.subtotal { text-align: right; }
+
+
+.o_pos_receipt_table .product-ref { font-size: 9px; color: #333; }
+
+
+.o_pos_receipt_table_totals .label { text-align: right; padding-right: 8px; }
+.o_pos_receipt_table_totals .value { text-align: right; }
+
+
+/* Reduce margins for printing */
+@media print {
+.o_pos_receipt_table .receipt-table th,
+.o_pos_receipt_table .receipt-table td { padding: 1px 2px; }
+}

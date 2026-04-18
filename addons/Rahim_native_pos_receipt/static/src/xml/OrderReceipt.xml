@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-name="Rahim_native_pos_receipt.RestaurantOrderReceipt" t-inherit="pos_restaurant.OrderReceipt" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('fs-2')][hasclass('mb-1')][contains(text(), 'Pro forma receipt')]" position="replace">
+            <div t-if="!order.finalized" class="fs-2 mb-1 fw-bold text-center">Bill</div>
+        </xpath>
+    </t>
+    
+    <t t-name="Rahim_native_pos_receipt.ReceiptHeader" t-inherit="point_of_sale.ReceiptHeader" t-inherit-mode="extension">
+        <xpath expr="//img[@class='pos-receipt-logo']" position="after">
+            <table class="table table-sm table-borderless mb-0" style="width:100%; margin: 10px 0 0 0; font-size: 85%;">
+                <tbody>
+                    <tr class="border-bottom border-secondary">
+                        <td style="padding: 5px 8px; font-weight: bold;" class="ps-2 fw-bold">
+                            <span class="ticket-name-prefix">Order Number</span>
+                        </td>
+                        <td style="padding: 5px 8px; text-align: right;">
+                            <t t-out="order.pos_reference"/>
+                        </td>
+                    </tr>
+                    <tr class="border-bottom border-secondary" t-if="order.date_order">
+                        <td style="padding: 5px 8px; font-weight: bold;" class="ps-2 fw-bold">Date</td>
+                        <td style="padding: 5px 8px; text-align: right;">
+                            <t t-out="order.formatDateOrTime('date_order', 'date')"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+        
+        <xpath expr="//div[hasclass('text-center')][hasclass('pt-3')]" position="replace"/>
+        
+        <xpath expr="//div[hasclass('pos-receipt-customer')]" position="replace">
+            <table t-if="order.partner_id" class="table table-sm table-borderless mb-0" style="width:100%; margin: 5px 0; font-size: 85%;">
+                <tbody>
+                    <tr t-if="order.partner_id.name" class="border-bottom border-secondary">
+                        <td style="padding: 5px 8px; font-weight: bold;" class="ps-2 fw-bold">Customer:</td>
+                        <td style="padding: 5px 8px; text-align: right;">
+                            <t t-if="order.partner_id.parent_name">
+                                <span t-esc="order.partner_id.parent_name"/>,
+                            </t>
+                            <span t-esc="order.partner_id.name"/>
+                        </td>
+                    </tr>
+                    <tr t-if="order.partner_id.vat" class="border-bottom border-secondary">
+                        <td style="padding: 5px 8px; font-weight: bold;" class="ps-2 fw-bold">TIN:</td>
+                        <td style="padding: 5px 8px; text-align: right;">
+                            <span t-esc="order.partner_id.vat"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+        
+        <xpath expr="//div[hasclass('cashier')]" position="replace">
+            <table t-if="order?.getCashierName() and (!order.preset_id or order.preset_id.identification === 'name')" class="table table-sm table-borderless mb-0" style="width:100%; margin: 5px 0; font-size: 85%;">
+                <tbody>
+                    <tr class="border-bottom border-secondary">
+                        <td style="padding: 5px 8px; font-weight: bold;" class="ps-2 fw-bold">Served by:</td>
+                        <td style="padding: 5px 8px; text-align: right;">
+                            <t t-esc="order.getCashierName()"/>
+                        </td>
+                    </tr>
+                    <tr t-if="order.table_id" class="border-bottom border-secondary">
+                        <td style="padding: 5px 8px; font-weight: bold;" class="ps-2 fw-bold">Table:</td>
+                        <td style="padding: 5px 8px; text-align: right;">
+                            <t t-esc="order.table_id.name"/>
+                            <t t-if="order.customer_count"> | Guests: <t t-esc="order.customer_count"/></t>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+        
+        <xpath expr="//div[hasclass('pos-receipt-contact')]" position="after">
+            <div t-if="order.tracking_number and order.config.displayTrackingNumber and order.config.displayBigTrackingNumber" style="text-align: center; margin: 15px 0; padding: 10px 0; border-top: 1px dashed #999; border-bottom: 1px dashed #999;">
+                <div style="font-size: 90%; color: #666; margin-bottom: 3px;">Order Number</div>
+                <span style="font-size: 180%; font-weight: bold; letter-spacing: 2px;" class="fw-bold">
+                    <t t-esc="order.tracking_number"/>
+                </span>
+            </div>
+        </xpath>
+    </t>
+
+    <t t-name="Rahim_native_pos_receipt.OrderReceipt" t-inherit="point_of_sale.OrderReceipt" t-inherit-mode="extension">
+        
+        <xpath expr="//OrderDisplay" position="replace">
+            <table class="table table-sm table-borderless mb-2" style="width:100%; margin: 15px 0 10px 0; font-size: 90%;">
+                <thead>
+                    <tr style="border-top: 2px solid #000; border-bottom: 1px solid #999;">
+                        <th style="padding: 8px 4px; text-align: left; font-weight: bold; width: 12%;" class="fw-bold">Qty</th>
+                        <th style="padding: 8px 4px; text-align: left; font-weight: bold; width: 43%;" class="fw-bold">Item</th>
+                        <th style="padding: 8px 4px; text-align: right; font-weight: bold; width: 22.5%;" class="fw-bold">Price</th>
+                        <th style="padding: 8px 4px; text-align: right; font-weight: bold; width: 22.5%;" class="fw-bold">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="order.lines" t-as="line" t-key="line.uuid">
+                        <tr style="border-bottom: 1px dashed #ddd;">
+                            <td style="padding: 8px 4px; vertical-align: top; text-align: left;">
+                                <t t-esc="line.qty"/>
+                            </td>
+                            <td style="padding: 8px 4px; vertical-align: top;">
+                                <div style="font-weight: 500;" class="fw-medium">
+                                    <t t-esc="line.full_product_name"/>
+                                </div>
+                                <div t-if="line.discount" style="font-size: 85%; color: #666; font-style: italic; margin-top: 2px;">
+                                    Discount: <t t-esc="line.discount"/>%
+                                </div>
+                                <div t-if="line.customerNote" style="font-size: 85%; font-style: italic; color: #555; margin-top: 4px; padding-left: 8px; border-left: 2px solid #999;">
+                                    <i class="fa fa-sticky-note me-1" style="font-size: 80%;"/>Note: <t t-esc="line.customerNote"/>
+                                </div>
+                            </td>
+                            <td style="padding: 8px 4px; text-align: right; vertical-align: top; font-family: monospace;">
+                                <t t-esc="formatCurrency(line.price_unit)"/>
+                            </td>
+                            <td style="padding: 8px 4px; text-align: right; vertical-align: top; font-weight: 500; font-family: monospace;" class="fw-medium">
+                                <t t-esc="formatCurrency(line.prices?.total_included || (line.qty * line.price_unit))"/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('pos-receipt-taxes')]" position="replace">
+            <t t-set="taxTotals" t-value="order.prices.taxDetails"/>
+            <table t-if="taxTotals and taxTotals.has_tax_groups" class="table table-sm table-borderless mb-0" style="width:60%; margin-left: auto; margin-right: 0; font-size: 85%;">
+                <tbody>
+                    <t t-foreach="taxTotals.subtotals" t-as="subtotal" t-key="subtotal.name">
+                        <tr class="border-bottom border-secondary">
+                            <td class="ps-2" style="padding: 5px 8px;">Subtotal</td>
+                            <td class="text-end font-monospace" style="padding: 5px 8px;">
+                                <t t-out="formatCurrency(order.priceExcl)"/>
+                            </td>
+                        </tr>
+                        <t t-foreach="subtotal.tax_groups" t-as="tax_group" t-key="tax_group.id">
+                            <tr class="border-bottom border-secondary">
+                                <td class="ps-2" style="padding: 5px 8px;">
+                                    <t t-esc="tax_group.group_name"/>
+                                </td>
+                                <td class="text-end font-monospace" style="padding: 5px 8px;">
+                                    <t t-out="formatCurrency(tax_group.tax_amount_currency)"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </t>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('receipt-total')]" position="replace">
+            <table class="table table-sm table-borderless mb-1" style="width:65%; margin-left: auto; margin-top: 5px; font-size: 90%;">
+                <tbody>
+                    <tr style="border-top: 2px solid #000; border-bottom: 2px solid #000;">
+                        <td class="ps-2 fw-bold" style="padding: 10px 8px; font-size: 115%;"><strong>Total</strong></td>
+                        <td class="text-end fw-bold font-monospace" style="padding: 10px 8px; font-size: 115%;">
+                            <strong><t t-out="order.currencyDisplayPriceIncl"/></strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('receipt-rounding')]" position="replace">
+            <table t-if="order.appliedRounding" class="table table-sm table-borderless mb-0" style="width:60%; margin-left: auto; font-size: 85%;">
+                <tbody>
+                    <tr class="border-bottom border-secondary">
+                        <td class="ps-2" style="padding: 5px 8px;">Rounding</td>
+                        <td class="text-end font-monospace" style="padding: 5px 8px;">
+                            <t t-out='formatCurrency(order.appliedRounding)'/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('receipt-to-pay')]" position="replace">
+            <table t-if="order.appliedRounding" class="table table-sm table-borderless mb-0" style="width:60%; margin-left: auto; font-size: 85%;">
+                <tbody>
+                    <tr class="border-bottom border-secondary">
+                        <td class="ps-2 fw-bold" style="padding: 5px 8px;"><strong>To Pay</strong></td>
+                        <td class="text-end fw-bold font-monospace" style="padding: 5px 8px;">
+                            <strong><t t-out='formatCurrency(order.totalDue)'/></strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('paymentlines')]" position="replace">
+            <table class="paymentlines table table-sm table-borderless mb-1" style="width:65%; margin-left: auto; margin-top: 8px; font-size: 90%;">
+                <tbody>
+                    <t t-foreach="paymentLines" t-as="line" t-key="line_index">
+                        <tr style="border-bottom: 1px dashed #ddd;">
+                            <td class="ps-2" style="padding: 6px 8px;">
+                                <t t-esc="line.payment_method_id.name"/>
+                            </td>
+                            <td class="text-end font-monospace" style="padding: 6px 8px;">
+                                <t t-out="formatCurrency(line.getAmount())"/>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('receipt-change')]" position="replace">
+            <table t-if="order.change" class="table table-sm table-borderless mb-0" style="width:60%; margin-left: auto; font-size: 85%;">
+                <tbody>
+                    <tr class="border-bottom border-secondary">
+                        <td class="ps-2 fw-bold" style="padding: 5px 8px;"><strong>Change</strong></td>
+                        <td class="text-end fw-bold font-monospace" style="padding: 5px 8px;">
+                            <strong><t t-out="formatCurrency(order.change)"/></strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('text-start')]/span[hasclass('label-discount')]/.." position="replace">
+            <t t-set="totalDiscount" t-value="order.getTotalDiscount()"/>
+            <table t-if="totalDiscount" class="table table-sm table-borderless mb-0" style="width:60%; margin-left: auto; margin-top: 5px; font-size: 85%;">
+                <tbody>
+                    <tr class="border-bottom border-secondary">
+                        <td class="ps-2 fw-bold" style="padding: 5px 8px;">Total Discounts</td>
+                        <td class="text-end font-monospace" style="padding: 5px 8px;">
+                            <t t-out="formatCurrency(totalDiscount)"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+
+        <xpath expr="//div[hasclass('d-flex')][hasclass('gap-2')][hasclass('pt-3')][last()]" position="replace">
+            <t t-set="company" t-value="order.company"/>
+            <table class="table table-sm table-borderless mb-0" style="width:100%; margin-top: 15px; font-size: 75%; border-top: 2px solid #000;">
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px; vertical-align: top; width: 50%; border-bottom: 1px solid #ddd;">
+                            <div class="fw-bold" style="margin-bottom: 3px;"><t t-out="order.config.name"/></div>
+                            <div>
+                                <t t-if="company.street" t-out="company.street"/><br/>
+                                <t t-if="company.city" t-out="company.city"/><t t-if="company.state_id?.code">, <t t-out="company.state_id.code"/></t><t t-if="company.zip"> <t t-out="company.zip"/></t>
+                            </div>
+                        </td>
+                        <td style="padding: 8px; vertical-align: top; text-align: right; width: 50%; border-bottom: 1px solid #ddd;">
+                            <div t-if="company.vat" t-out="vatText"/>
+                            <div t-if="company.phone">Tel: <t t-out="company.phone"/></div>
+                            <div t-if="company.email" t-out="company.email"/>
+                            <div t-if="company.website" t-out="company.website"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </xpath>
+
+    </t>
+</templates>
